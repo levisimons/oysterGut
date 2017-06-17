@@ -39,13 +39,10 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
     if lineNum%4 == 3:
       leftQI = str(leftLine)
       rightQI = str(rightLine)
-    if lineNume%4 == 0:
+    if lineNum%4 == 0:
       leftQuality = str(leftLine)
       rightQuality = str(rightLine)
-    if match = True:
+    if match == True:
       print leftFileName
-      print leftIdentifier
-      print leftSequence
-      print leftQI
-      print leftQuality
+      print leftIdentifier,leftSequence,leftQI,leftQuality
     lineNum=lineNum+1
