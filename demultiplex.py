@@ -45,8 +45,10 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
     if match == True:
       leftOutput = open(leftFileName, 'w')
       leftOutputLine = leftIdentifier,leftSequence,leftQI,leftQuality
+      leftOutputLine = '\n'.join(leftOutputLine)
       leftOutput.write(leftOutputLine)
       rightOutput = open(rightFileName, 'w')
       rightOutputLine = rightIdentifier,rightSequence,rightQI,rightQuality
+      rightOutputLine = '\n'.join(rightOutputLine)
       rightOutput.write(rightOutputLine)
     lineNum=lineNum+1
