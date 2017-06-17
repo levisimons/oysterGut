@@ -24,8 +24,8 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
         if leftIndex in leftIndexList:
           if rightIndex in rightIndexList:
             match = True
-            leftSequence=str(leftLine)
-            rightSequence=str(rightLine)
+            leftSequence=leftLine[9:]
+            rightSequence=rightLine[9:]
             leftIndexNum = leftIndexList.index(leftIndex)+1
             rightIndexNum = rightIndexList.index(rightIndex)+1
             #print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
