@@ -10,8 +10,8 @@ rightIndexList = ['CGTGA','ACATC','GCCTA','TGGTC','CACTG','ATTGG','GATCT','TCAAG
 
 leftRead = gzip.open('Undetermined_S0_L001_R1_001.fastq.gz','r')
 rightRead = gzip.open('Undetermined_S0_L001_R2_001.fastq.gz','r')
-rightIndex = gzip.open('Undetermined_S0_L001_I1_001.fastq.gz','r')
-for leftLine, rightLine, indexLine in izip(leftRead, rightRead, rightIndex):
+indexRead = gzip.open('Undetermined_S0_L001_I1_001.fastq.gz','r')
+for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
     if lineNum%4 == 2:
         leftIndex=leftLine[4:9]
         rightIndex=indexLine
