@@ -22,7 +22,9 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
             leftIndexNum = leftIndexList.index(leftIndex)+1
             rightIndexNum = rightIndexList.index(rightIndex)+1
             print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
-            leftFileName = ''.join('F',leftIndexNum,'R',rightIndexNum,leftFileSuffix)
-            rightFileName = ''.join('F',leftIndexNum,'R',rightIndexNum,rightFileSuffix)
+            leftfileName = 'F',leftIndexNum,'R',rightIndexNum,leftFileSuffix
+            leftFileName = ''.join(leftFileName)
+            rightFileName = 'F',leftIndexNum,'R',rightIndexNum,rightFileSuffix
+            rightFileName = ''.join(rightFileName)
             print leftFileName, rightFileName
     lineNum=lineNum+1
