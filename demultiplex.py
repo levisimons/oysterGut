@@ -7,8 +7,8 @@ lineNum=1
 leftIndexList = ['TCAGC','GTATC','GCTAC','ACGCA',',CGCGT','CTGGT','GCGTT','GGAAC','AAGCC','AGCTT','CCCTT','CGCAC','GGTGT',
                  'GGCAG','TGATA','TGTGC']
 rightIndexList = ['CGTGA','ACATC','GCCTA','TGGTC','CACTG','ATTGG','GATCT','TCAAG','TGACA','GGACG','GCGGA','TTTCA','CCGGT','ATCGT','TGAGT','CGCCT']
-leftFileSuffix = 'L001_R1_001.fastq'
-rightFileSuffix = 'L001_R2_001.fastq'
+leftFileSuffix = '_L001_R1_001.fastq'
+rightFileSuffix = '_L001_R2_001.fastq'
 
 leftRead = gzip.open('Undetermined_S0_L001_R1_001.fastq.gz','r')
 rightRead = gzip.open('Undetermined_S0_L001_R2_001.fastq.gz','r')
@@ -22,9 +22,9 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
             leftIndexNum = leftIndexList.index(leftIndex)+1
             rightIndexNum = rightIndexList.index(rightIndex)+1
             print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
-            leftFileName = 'F',str(leftIndexNum),'R',str(rightIndexNum),str(leftFileSuffix)
+            leftFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(leftFileSuffix)
             leftFileName = ''.join(leftFileName)
-            rightFileName = 'F',str(leftIndexNum),'R',str(rightIndexNum),str(rightFileSuffix)
+            rightFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(rightFileSuffix)
             rightFileName = ''.join(rightFileName)
             print leftFileName, rightFileName
     lineNum=lineNum+1
