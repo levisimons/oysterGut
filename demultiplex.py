@@ -15,6 +15,7 @@ leftRead = gzip.open('Undetermined_S0_L001_R1_001.fastq.gz','r')
 rightRead = gzip.open('Undetermined_S0_L001_R2_001.fastq.gz','r')
 indexRead = gzip.open('Undetermined_S0_L001_I1_001.fastq.gz','r')
 for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
+    match = False
     if lineNum%4 == 1:
       leftIdentifier=str(leftLine)
       rightIdentifier=str(rightLine)
@@ -25,7 +26,7 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
           if rightIndex in rightIndexList:
             match = True
             leftSequence=leftLine[9:]
-            rightSequence=rightLine[9:]
+            rightSequence=str(rightLine)
             leftIndexNum = leftIndexList.index(leftIndex)+1
             rightIndexNum = rightIndexList.index(rightIndex)+1
             #print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
@@ -46,10 +47,12 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
       leftOutput = open(leftFileName, 'a')
       leftOutputLine = leftIdentifier,leftSequence,leftQI,leftQuality
       leftOutputLine = ''.join(leftOutputLine)
-      leftOutput.write(leftOutputLine)
+      #leftOutput.write(leftOutputLine)
+      print leftOutputLine
       rightOutput = open(rightFileName, 'a')
       rightOutputLine = rightIdentifier,rightSequence,rightQI,rightQuality
       rightOutputLine = ''.join(rightOutputLine)
-      rightOutput.write(rightOutputLine)
+      #rightOutput.write(rightOutputLine)
+      print rightOutputLine
     match = False
     lineNum=lineNum+1
