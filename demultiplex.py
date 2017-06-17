@@ -51,4 +51,5 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
       rightOutputLine = rightIdentifier,rightSequence,rightQI,rightQuality
       rightOutputLine = ''.join(rightOutputLine)
       rightOutput.write(rightOutputLine)
+    match = False
     lineNum=lineNum+1
