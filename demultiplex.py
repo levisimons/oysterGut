@@ -9,22 +9,43 @@ leftIndexList = ['TCAGC','GTATC','GCTAC','ACGCA',',CGCGT','CTGGT','GCGTT','GGAAC
 rightIndexList = ['CGTGA','ACATC','GCCTA','TGGTC','CACTG','ATTGG','GATCT','TCAAG','TGACA','GGACG','GCGGA','TTTCA','CCGGT','ATCGT','TGAGT','CGCCT']
 leftFileSuffix = '_L001_R1_001.fastq'
 rightFileSuffix = '_L001_R2_001.fastq'
+match = False
 
 leftRead = gzip.open('Undetermined_S0_L001_R1_001.fastq.gz','r')
 rightRead = gzip.open('Undetermined_S0_L001_R2_001.fastq.gz','r')
 indexRead = gzip.open('Undetermined_S0_L001_I1_001.fastq.gz','r')
 for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
+    if lineNum%4 == 1:
+      leftIdentifier=str(leftLine)
+      rightIdentifier=str(rightLine)
     if lineNum%4 == 2:
         leftIndex=leftLine[4:9]
         rightIndex=indexLine[0:5]
         if leftIndex in leftIndexList:
           if rightIndex in rightIndexList:
+            match = True
+            leftSequence=str(leftLine)
+            rightSequence=str(rightLine)
             leftIndexNum = leftIndexList.index(leftIndex)+1
             rightIndexNum = rightIndexList.index(rightIndex)+1
-            print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
+            #print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
             leftFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(leftFileSuffix)
             leftFileName = ''.join(leftFileName)
             rightFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(rightFileSuffix)
             rightFileName = ''.join(rightFileName)
-            print leftFileName, rightFileName
+            #print leftFileName, rightFileName
+          else: match = False
+        else: match = False
+    if lineNum%4 == 3:
+      leftQI = str(leftLine)
+      rightQI = str(rightLine)
+    if lineNume%4 == 0:
+      leftQuality = str(leftLine)
+      rightQuality = str(rightLine)
+    if match = True:
+      print leftFileName
+      print leftIdentifier
+      print leftSequence
+      print leftQI
+      print leftQuality
     lineNum=lineNum+1
