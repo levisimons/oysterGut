@@ -14,10 +14,7 @@ indexRead = gzip.open('Undetermined_S0_L001_I1_001.fastq.gz','r')
 for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
     if lineNum%4 == 2:
         leftIndex=leftLine[4:9]
-        rightIndex=indexLine
+        rightIndex=indexLine[0:5]
         if leftIndex in leftIndexList:
-          if rightIndex in rightIndexList:
-            leftPrimerNum = leftIndexList.index(leftIndex)+1
-            rightPrimerNum = rightIndexList.index(rightIndex)+1
-            print (leftIndex.rstrip(), leftPrimerNum, leftLine.rstrip(), indexLine.rstrip(), rightPrimerNum, rightLine.rstrip())
+          if rightIndex in rightIndexList: print 'Left ', leftIndexList.index(leftIndex)+1, leftIndex, 'Right ', rightIndexList.index(rightIndex)+1, rightIndex        
     lineNum=lineNum+1
