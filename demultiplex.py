@@ -22,6 +22,8 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
   if lineNum%4 == 2:
     leftIndex=leftLine[4:9]
     rightIndex=indexLine[0:5]
+    leftSequence=leftLine[9:]
+    rightSequence=rightLine[15:]
   if lineNum%4 == 3:
     leftQI = str(leftLine)
     rightQI = str(rightLine)
@@ -30,8 +32,6 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
     rightQuality = str(rightLine)
     if leftIndex in leftIndexList:
       if rightIndex in rightIndexList:
-        leftSequence=leftLine[9:]
-        rightSequence=rightLine[0:]
         leftIndexNum = leftIndexList.index(leftIndex)+1
         rightIndexNum = rightIndexList.index(rightIndex)+1
         #print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
