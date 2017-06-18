@@ -9,6 +9,8 @@ leftIndexList = ['TCAGC','GTATC','GCTAC','ACGCA',',CGCGT','CTGGT','GCGTT','GGAAC
 rightIndexList = ['CGTGA','ACATC','GCCTA','TGGTC','CACTG','ATTGG','GATCT','TCAAG','TGACA','GGACG','GCGGA','TTTCA','CCGGT','ATCGT','TGAGT','CGCCT']
 leftFileSuffix = '_L001_R1_001.fastq'
 rightFileSuffix = '_L001_R2_001.fastq'
+leftIndex = 'Blank'
+rightIndex = 'Blank'
 
 leftRead = gzip.open('Undetermined_S0_L001_R1_001.fastq.gz','r')
 rightRead = gzip.open('Undetermined_S0_L001_R2_001.fastq.gz','r')
@@ -18,8 +20,8 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
       leftIdentifier=str(leftLine)
       rightIdentifier=str(rightLine)
     if lineNum%4 == 2:
-        leftIndex=leftLine[4:9]
-        rightIndex=indexLine[0:5]
+      leftIndex=leftLine[4:9]
+      rightIndex=indexLine[0:5]
     if lineNum%4 == 3:
       leftQI = str(leftLine)
       rightQI = str(rightLine)
