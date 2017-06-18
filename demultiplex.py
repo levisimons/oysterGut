@@ -40,16 +40,16 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
         rightFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(rightFileSuffix)
         rightFileName = ''.join(rightFileName)
         #print leftFileName, rightFileName
-        #leftOutput = open(leftFileName, 'a')
+        leftOutput = open(leftFileName, 'a')
         leftOutputLine = leftIdentifier,leftSequence,leftQI,leftQuality
         leftOutputLine = ''.join(leftOutputLine)
-        #leftOutput.write(leftOutputLine)
-        print leftFileName,leftOutputLine
+        leftOutput.write(leftOutputLine)
+        #print leftFileName,leftOutputLine
         rightOutput = open(rightFileName, 'a')
         rightOutputLine = rightIdentifier,rightSequence,rightQI,rightQuality
         rightOutputLine = ''.join(rightOutputLine)
-        #rightOutput.write(rightOutputLine)
-        print rightFileName,rightOutputLine
+        rightOutput.write(rightOutputLine)
+        #print rightFileName,rightOutputLine
         leftIndex = 'Blank'
         rightIndex = 'Blank'
   lineNum=lineNum+1
