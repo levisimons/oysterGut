@@ -16,8 +16,6 @@ leftRead = gzip.open('Undetermined_S0_L001_R1_001.fastq.gz','r')
 rightRead = gzip.open('Undetermined_S0_L001_R2_001.fastq.gz','r')
 indexRead = gzip.open('Undetermined_S0_L001_I1_001.fastq.gz','r')
 for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
-  leftIndex = 'Blank'
-  rightIndex = 'Blank'
   if lineNum%4 == 1:
     leftIdentifier=str(leftLine)
     rightIdentifier=str(rightLine)
@@ -52,4 +50,6 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
         rightOutputLine = ''.join(rightOutputLine)
         #rightOutput.write(rightOutputLine)
         print rightFileName,rightOutputLine
+        leftIndex = 'Blank'
+        rightIndex = 'Blank'
   lineNum=lineNum+1
