@@ -22,7 +22,7 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
   if lineNum%4 == 2:
     leftIndex=leftLine[4:9]
     rightIndex=indexLine[0:5]
-    leftSequence=leftLine[9:]
+    leftSequence=leftLine[25:]
     rightSequence=rightLine[19:]
   if lineNum%4 == 3:
     leftQI = str(leftLine)
