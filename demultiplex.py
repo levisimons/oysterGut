@@ -28,16 +28,16 @@ for leftLine, rightLine, indexLine in izip(leftRead, rightRead, indexRead):
     leftQI = str(leftLine)
     rightQI = str(rightLine)
   if lineNum%4 == 0:
-    leftQuality = str(leftLine)
-    rightQuality = str(rightLine)
+    leftQuality = leftLine[25:]
+    rightQuality = rightLine[19:]
     if leftIndex in leftIndexList:
       if rightIndex in rightIndexList:
         leftIndexNum = leftIndexList.index(leftIndex)+1
         rightIndexNum = rightIndexList.index(rightIndex)+1
         #print 'Left ', leftIndexNum, leftIndex, 'Right ', rightIndexNum, rightIndex
-        leftFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(leftFileSuffix)
+        leftFileName = 'F',str(leftIndexNum),'R',str(rightIndexNum),str(leftFileSuffix)
         leftFileName = ''.join(leftFileName)
-        rightFileName = 'F',str(leftIndexNum),'_R',str(rightIndexNum),str(rightFileSuffix)
+        rightFileName = 'F',str(leftIndexNum),'R',str(rightIndexNum),str(rightFileSuffix)
         rightFileName = ''.join(rightFileName)
         #print leftFileName, rightFileName
         leftOutput = open(leftFileName, 'a')
