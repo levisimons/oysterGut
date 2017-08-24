@@ -7,6 +7,7 @@ library(codyn)
 library(corrgram)
 library(igraph)
 library(corrplot)
+library(network)
 ##############
 ## Read in data
 ## There is a separate feedstock and oyster file.
@@ -17,7 +18,24 @@ setwd("~/Desktop/OysterGut/Analysis")
 ## The first three columns are removed as they contain labels unnecessary for later analysis.
 Top30 <- read.table("stability.feed.CHAE.label.Top30.shared.tsv", header = TRUE, sep="\t", as.is=T)
 Top30 <- Top30[ -c(1:3)]
+
+## Generate a correlation matrix of the most abundant OTUs across a set of samples.
 M <- cor(Top30)
+mat=cor(Top30)
+
+## Only consider links with correlation values beyond +/-0.5.
+mat[abs(mat)<0.5]=0
+
+## Get the following network statistics:
+## total edges, missing edges, non-missing edges, density. 
+summary(as.network.matrix(mat))
+
+## Convert matrix to graph object.
+network=graph_from_adjacency_matrix(mat, weighted=T, mode="undirected", diag=F)
+## Calculate the average network path length
+mean_distance(network)
+## Calculate the clustering coefficient
+transitivity(network)
 
 # Tally the total OTU count across all samples being studied.
 # This is to resize the nodes in a network graph according to their OTU abundance.
@@ -29,6 +47,7 @@ TotOTUs <- colSums(Top30)
 mat=cor((Top30))
 mat[abs(mat)<0.9]=0
 network=graph_from_adjacency_matrix(mat, weighted=T, mode="undirected", diag=F)
+diameter(network)
 fine = 50 # this will adjust the resolving power.
 palette = colorRampPalette(c('red','blue'))
 #this gives you the colors you want for every point
