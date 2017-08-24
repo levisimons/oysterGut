@@ -26,10 +26,12 @@ mat=cor(Top30)
 ## Only consider links with correlation values beyond +/-0.5.
 mat[abs(mat)<0.5]=0
 
-## Get the following network statistics:
-## total edges, missing edges, non-missing edges, density. 
-summary(as.network.matrix(mat))
-
+## Get the total edges in the network.
+network.edgecount(as.network.matrix(mat))
+## Get the missing number of edges in the network.
+network.naedgecount(as.network.matrix(mat))
+## Get the network density.
+network.density(as.network.matrix(mat))
 ## Convert matrix to graph object.
 network=graph_from_adjacency_matrix(mat, weighted=T, mode="undirected", diag=F)
 ## Calculate the average network path length
