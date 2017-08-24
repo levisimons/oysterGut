@@ -16,24 +16,26 @@ setwd("~/Desktop/OysterGut/Analysis")
 
 ## Read in an OTU abundance by sample data .shared file.
 ## The first three columns are removed as they contain labels unnecessary for later analysis.
-Top30 <- read.table("stability.feed.CHAE.label.Top30.shared.tsv", header = TRUE, sep="\t", as.is=T)
+Top30 <- read.table("stability.feed.TET.label.Top30.shared.tsv", header = TRUE, sep="\t", as.is=T)
 Top30 <- Top30[ -c(1:3)]
 
 ## Generate a correlation matrix of the most abundant OTUs across a set of samples.
 M <- cor(Top30)
-mat=cor(Top30)
+#is.na(M) <- !M
 
 ## Only consider links with correlation values beyond +/-0.5.
-mat[abs(mat)<0.5]=0
-
+M[abs(M)<0.5] <- NA
+OTUMatrix <- as.network(M, directed=TRUE, loops=FALSE, matrix.type="adjacency")
+plot.network(OTUMatrix, displaylabels=T)
 ## Get the total edges in the network.
-network.edgecount(as.network.matrix(mat))
+0.5*network.edgecount(OTUMatrix)
 ## Get the missing number of edges in the network.
-network.naedgecount(as.network.matrix(mat))
+0.5*network.naedgecount(OTUMatrix)
 ## Get the network density.
-network.density(as.network.matrix(mat))
-## Convert matrix to graph object.
-network=graph_from_adjacency_matrix(mat, weighted=T, mode="undirected", diag=F)
+network.density(OTUMatrix)
+## Convert matrix to graph object.  Set NA to 0 for additional graph statistics.
+M[is.na(M)] <- 0
+network=graph_from_adjacency_matrix(M, weighted=TRUE, mode="undirected", diag=F)
 ## Calculate the average network path length
 mean_distance(network)
 ## Calculate the clustering coefficient
@@ -48,8 +50,7 @@ TotOTUs <- colSums(Top30)
 # Links are sized by the strength of the Pearson correlation coefficient across samples.
 mat=cor((Top30))
 mat[abs(mat)<0.9]=0
-network=graph_from_adjacency_matrix(mat, weighted=T, mode="undirected", diag=F)
-diameter(network)
+network=graph_from_adjacency_matrix(M, weighted=T, mode="undirected", diag=F)
 fine = 50 # this will adjust the resolving power.
 palette = colorRampPalette(c('red','blue'))
 #this gives you the colors you want for every point
