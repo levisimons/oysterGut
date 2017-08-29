@@ -1,5 +1,6 @@
 library(ggplot2)
 library(ggfortify)
+library(rgl)
 
 setwd("~/Desktop/OysterGut/Analysis")
 
@@ -22,5 +23,19 @@ barplot(var.percent, xlab="Principal Component", ylab="Percent Variance", names.
 autoplot(prcomp(RabundOTUs), data=RabundData, 
          xlab=paste('PCA1, percent variation: ',round(var.percent[1], digits=3)), 
          ylab=paste('PCA2, percent variation: ',round(var.percent[2], digits=3)),
-         main='PCA2 vs. PCA1 Oyster stomach samples and fecal pellet communities',
+         main='PCA2 vs. PCA1 Oyster stomach and fecal pellet communities',
+         loadings=FALSE, loadings.label=FALSE, 
          shape=TRUE, label=FALSE, loadings.label.size = 3, colour='FeedType')
+plot3d(pc$scores[,1:3], col=iris$Species)
+summary(prcomp(RabundOTUs))
+
+head(unclass(RabundOTUs.pca$rotation)[,1:4])
+## Take the top four principal components from your data.
+RabundOTUsPC <- princomp(RabundOTUs[,1:4])
+## Convert feed type from a name to a numerical scale for later plotting.
+FeedNum <- as.numeric(as.factor(RabundData$FeedType))
+## Plot the three largest principal components.
+plot3d(RabundOTUsPC$scores[,1:3], col=FeedNum)
+## Include a legend for the scale for feed type.
+legend3d("topleft", col=1:3, legend = c("CHAE","ISO","TET"), pch = 20, bty='n', cex=.75)
+summary(RabundOTUsPC)
