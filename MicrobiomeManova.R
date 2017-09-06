@@ -27,11 +27,14 @@ oysters <- merge(oyster,oysterAbundances,all.Group=TRUE)
 ## Ignore the oyster gut community sample rows.
 oysters <- oysters[-c(6,22,31,48,64,74,86,93),]
 
+## Ignore the oyster fecal pellet community sample rows.
+oysters <- oysters[c(6,22,31,48,64,74,86,93),]
+
 ## Treat the relative abundances of the selected OTUs as a variable.
-TopOysterOTUs <- as.matrix(oysters[,c(9:19)])
+TopOysterOTUs <- as.matrix(oysters[,c(9:20)])
 
 ## Test the signifance of experimental variables on the selected OTU data.
-OysterManova <- manova(TopOysterOTUs ~ OysterID*FeedType, data=oysters)
+OysterManova <- manova(TopOysterOTUs ~ OysterID*FeedType*WeekFromStart, data=oysters)
 summary(OysterManova)
 
 ## Read in data representing relative abundance values for each OTU by feedstock sample.
@@ -43,7 +46,8 @@ feedAbundances <- read.table("feedAbundances", header = TRUE, sep="\t", as.is=T)
 feed <- merge(feedstock,feedAbundances,all.Group=TRUE)
 
 ## Treat the relative abundances of the selected OTUs as a variable.
-TopFeedOTUs <- as.matrix(feed[,c(6:15)])
+TopFeedOTUs <- as.matrix(feed[,c(6:17)])
+summary(TopFeedOTUs)
 
 ## Test the signifance of experimental variables on the selected OTU data.
 FeedManova <- manova(TopFeedOTUs ~ FeedType, data=feed)
