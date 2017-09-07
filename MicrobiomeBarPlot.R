@@ -18,14 +18,14 @@ oysterAbundances <- read.table("oysterAbundances", header = TRUE, sep="\t", as.i
 ## Read in data representing relative abundance values for each OTU by oyster sample.
 ## The absolute sequence counts by OTU are normalized by total sequences per sample.
 ## The data and design factors here are for the feedstock microbiome samples.
-#feed <- read.table("feedstock", header = TRUE, sep="\t", as.is=T)
+feed <- read.table("feedstock", header = TRUE, sep="\t", as.is=T)
 feedAbundances <- read.table("feedAbundances", header = TRUE, sep="\t", as.is=T)
 
 ## Merge the experimental design factors and genu labels with the relative OTU abundance data.
 ## Choose this merge command set for the feedstock data.
 RabundData <- merge(feed,feedAbundances,all.Group=TRUE)
 colnames(RabundData)[6:4014] <- Genus
-RabundData <- RabundData[,c(1,6:16)]
+RabundData <- RabundData[,c(1,3,6:7)]
 
 ## Merge the experimental design factors and genu labels with the relative OTU abundance data.
 ## Choose this merge command set for the oyster data.
@@ -34,8 +34,9 @@ colnames(RabundData)[9:4017] <- Genus
 RabundData <- RabundData[,c(1,9:19)]
 
 ## Use this command to store community data as a plot object.
-RabundPlot <- melt(RabundData, id.vars = "Group", variable.name = "Genus")
+RabundPlot <- melt(RabundData, id.vars = "WeekFromStart", variable.name = "Genus")
+RabundPlot <- RabundPlot[-c(1:17),]
 
 ## Plot the relative abundance of each taxa for a given plot object.
-p <- ggplot(RabundPlot, aes(x = Group, y = value, fill = Genus)) 
-p + geom_bar(stat = "identity") + labs(x="Sample ID",y="Relative abundance", title="Relative abundance of taxa by sample")
+p <- ggplot(RabundPlot, aes(x = WeekFromStart, y = value, fill = Genus)) 
+p + geom_bar(stat = "identity") + labs(x="Week from start",y="Relative abundance", title="Relative abundance of taxa by sample")
