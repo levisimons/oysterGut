@@ -1,11 +1,16 @@
 library("plyr")
 library("ggplot2")
 library(phyloseq)
+library("ape")
 
 setwd("~/Desktop/OysterMicrobiome")
 
 ## Read in OTU count data by sample file and the taxonomy file from MOTHUR output.
-OTUCount <- import_mothur(mothur_shared_file = "stability.opti_mcc.shared", mothur_constaxonomy_file = "stability.cons.taxonomy")
+OTUCount <- import_mothur(mothur_shared_file = "stability.opti_mcc.shared",
+                          mothur_constaxonomy_file = "stability.cons.taxonomy")
+
+phy_tree(OTUCount) <- rtree(ntaxa(OTUCount), rooted=TRUE, tip.label=taxa_names(OTUCount))
+
 ## Scale OTU by relative sequence abundance.
 OTUCount = transform_sample_counts(OTUCount,function(x) x / sum(x))
 ## Filter out OTUs with a relative abundance below a given cutoff.
@@ -19,6 +24,6 @@ microbiome <- merge_phyloseq(OTUCount,factors)
 ## Update the taxonomic order names.
 colnames(tax_table(microbiome)) <- c("kingdom", "phylum", "class", "order", "family",  "genus")
 
-MB.ord <- ordinate(microbiome,"NMDS","bray")
+MB.ord <- ordinate(microbiome,"NMDS","wunifrac")
 p = plot_ordination(microbiome,MB.ord,type="samples", color="FeedType", title="Samples by feed type")
 print(p)
