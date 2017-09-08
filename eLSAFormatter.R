@@ -1,24 +1,23 @@
-##############
-## Read in data
-## There is a separate feedstock and oyster file.
-## The first columns contain important experimental information.
-setwd("~/Desktop/OysterGut/OysterMicrobiome")
+library(ggplot2)
+library(reshape2)
+library(phyloseq)
 
-## Read in data representing relative abundance values for each OTU by oyster sample.
-## The absolute sequence counts by OTU are normalized by total sequences per sample.
-oyster <- read.table("oyster", header = TRUE, sep="\t", as.is=T)
-oysterAbundances <- read.table("oysterAbundances", header = TRUE, sep="\t", as.is=T)
+setwd("~/Desktop/OysterMicrobiome")
 
-## Merge the experimental design factors with the relative OTU abundance data.
-oysters <- merge(oyster,oysterAbundances,all.Group=TRUE)
-oysters <- oysters[,c(1,4,9:48)]
+OTUCount <- import_mothur(mothur_shared_file = "stability.opti_mcc.shared", mothur_constaxonomy_file = "stability.cons.taxonomy")
+OTUCount = transform_sample_counts(OTUCount,function(x) x / sum(x))
+OTUCount = filter_taxa(OTUCount, function(x) mean(x) > 1e-2, TRUE)
 
-## Read in data representing relative abundance values for each OTU by feedstock sample.
-## The absolute sequence counts by OTU are normalized by total sequences per sample.
-feedstock <- read.table("feedstock", header = TRUE, sep="\t", as.is=T)
-feedAbundances <- read.table("feedAbundances", header = TRUE, sep="\t", as.is=T)
+factors <- read.table("MicrobiomeFactors.tsv", header=TRUE, sep="\t",as.is=T)
 
-## Merge the experimental design factors with the relative OTU abundance data.
-feed <- merge(feedstock,feedAbundances,all.Group=TRUE)
+factors <- sample_data(data.frame(factors, row.names=sample_names(OTUCount)))
 
-microbiome <- rbind(feedAbundances,oysterAbundances,by="Group")
+microbiome <- merge_phyloseq(OTUCount,factors)
+colnames(tax_table(microbiome)) <- c("kingdom", "phylum", "class", "order", "family",  "genus")
+microbiomeDF <- psmelt(microbiome)
+eLSAMicrobiome <- subset(microbiomeDF, select=c("OTU","genus","SampleID"))
+eLSAMicrobiome$OTUAndTaxa <- as.character((interaction(eLSAMicrobiome,sep="-")))
+OTUAndTaxa <- subset(eLSAMicrobiome, select=c("OTUAndTaxa"))
+AbundanceAndTime <- subset(microbiomeDF,select=c("Abundance","WeekFromStart"))
+eLSAMicrobiome <- cbind(OTUAndTaxa,AbundanceAndTime)
+reshape(eLSAMicrobiome,idvar="OTUAndTaxa",timevar="WeekFromStart",direction="wide")
