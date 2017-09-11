@@ -37,9 +37,10 @@ colnames(tax_table(microbiome)) <- c("kingdom", "phylum", "class", "order", "fam
 
 ## Load distance methods.
 dist_methods <- unlist(distanceMethodList)
-## Remove the user-defined distances
-dist_methods <- dist_methods[(2:8)]
-dist_methods <- dist_methods[-(2:6)]
+print(dist_methods)
+## Remove the user-defined distances.
+## Choose 2 for weight unifrac and 8 for bray-curtis.
+dist_methods <- dist_methods[c(2,8)]
 print(dist_methods)
 
 ## Loop through each distance method, save each plot to a list, called plist.
@@ -48,6 +49,8 @@ names(plist) = dist_methods
 for( i in dist_methods ){
   # Calculate distance matrix
   iDist <- distance(microbiome, method=i)
+  x <- cmdscale(iDist,eig=TRUE)
+  print(x$eig[1:4])
   # Calculate ordination
   iMDS  <- ordinate(microbiome, "MDS", distance=iDist)
   ## Make plot
@@ -61,7 +64,7 @@ for( i in dist_methods ){
   plist[[i]] = p
 }
 
-## Plot the distance metrics in a grid of plots using available data.
+## If you want to plot the distance metrics in a grid of plots using available data.
 df = ldply(plist, function(x) x$data)
 names(df)[1] <- "distance"
 p = ggplot(df, aes(Axis.1, Axis.2, color=SampleType))
@@ -73,5 +76,15 @@ p
 ## Plot Shannon index of samples.  Color by a design variable.
 plot_richness(microbiomeRaw, measures=c("Shannon","Chao1"),color="SampleType",title="Alpha diversity metrics \n oyster microbiome data")
 
-estimate_richness(microbiomeRaw,measures=c("Shannon","Chao1"))
-
+alphaDiversity <- estimate_richness(microbiomeRaw,measures=c("Shannon","Chao1"))
+alphaDiversity <- as.data.frame(alphaDiversity)
+alphaDiversity$Group <- rownames(alphaDiversity)
+alphaDiversity <- alphaDiversity[,c(which(colnames(alphaDiversity)=="Group"),which(colnames(alphaDiversity)!="Group"))]
+factors <- as.data.frame(factors)
+alphaDiversity <- merge(factors,alphaDiversity,by=0)
+alphaDiversity <- subset(alphaDiversity, select=-c(1,8))
+colnames(alphaDiversity)[colnames(alphaDiversity)=="Group.x"] <- "Group"
+alphaDiversity <- as.data.frame(alphaDiversity)
+a <- alphaDiversity$Shannon[alphaDiversity$SampleType=="GUT"]
+b <- alphaDiversity$Shannon[alphaDiversity$SampleType=="FEED"]
+wilcox.test(a,b)
