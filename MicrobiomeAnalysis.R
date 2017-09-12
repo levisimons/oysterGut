@@ -32,15 +32,16 @@ microbiomeRaw<-rarefy_even_depth(microbiomeRaw, sample.size = OTUThreshold,rngse
 ## If you want to scale OTU by relative sequence abundance.
 ## This is needed for any beta diversity analysis.
 ## OTUs with a rarity below a given cutoff are removed from this analysis.
-microbiome = transform_sample_counts(microbiomeRaw,function(x) x / sum(x))
+microbiome <- microbiomeRaw
+microbiome = transform_sample_counts(microbiome,function(x) x / sum(x))
 ## If you want to filter out OTUs with a relative abundance below a given cutoff.
-microbiome = filter_taxa(microbiomeRaw, function(x) mean(x) > 1e-3, TRUE)
+microbiome = filter_taxa(microbiome, function(x) mean(x) > 1e-3, TRUE)
 
 ## Load distance methods.
 dist_methods <- unlist(distanceMethodList)
 print(dist_methods)
 ## Remove the user-defined distances.
-## Choose 2 for weight unifrac and 8 for bray-curtis.
+## Choose 2 for weighted unifrac and 8 for bray-curtis.
 dist_methods <- dist_methods[c(8)]
 print(dist_methods)
 
@@ -93,7 +94,7 @@ qnorm(wtest$p.value)
 ## Perform a PERMANOVA using a set number of permutations on a particular
 ## beta diversity metric and the significance of a particular design variable.
 microbiomeDF = as(sample_data(microbiome), "data.frame")
-microbiomeDist = distance(microbiome,method="wunifrac")
+microbiomeDist = distance(microbiome,method="bray")
 microbiomeAdonis = adonis(microbiomeDist ~ FeedType, microbiomeDF,permutations = 10000)
 microbiomeAdonis
 
@@ -106,3 +107,31 @@ p = p + geom_point(size=1.5, alpha=0.5)
 p = p + facet_wrap(~distance, scales="free")
 p = p + ggtitle("Multidimensional Distance Scalings \n various distance metrics for oyster microbiome data")
 p
+
+## Bar plot of relative OTU abundances.
+g = plot_bar(microbiome, fill="phylum", facet_grid = ~SampleType)
+g = g + geom_bar(aes(color=phylum, fill=phylum), stat="identity", position="stack")
+g = g + ggtitle(paste("Relative OTU abundance by sample \n Even sampling depth of ", OTUThreshold, "sequences",sep=" "))
+g
+
+## Merge relative OTU abundance data with design variables into a Phyloseq object.
+## This is done to select the most abundant taxa from the dataset for
+## more downstream analysis.
+microbiomeRaw <- merge_phyloseq(OTUCount,factors)
+colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "family",  "genus")
+
+## Find the most abundant OTUs as selected by an experiment variable
+## such as feed type.
+aTaxa = 5
+algae = "TET"
+MBSubset = subset_taxa(microbiomeRaw,FeedType=feed)
+MBAbundant = sort(taxa_sums(microbiomeRaw), TRUE)[1:aTaxa]
+MBSubset = prune_taxa(names(MBAbundant), microbiomeRaw)
+MBSubset = transform_sample_counts(MBSubset,function(x) x / sum(x))
+
+## Plot the most abundant OTUs
+b = plot_bar(MBSubset, fill="genus", facet_grid = ~SampleType)
+b = b + geom_bar(aes(color=genus, fill=genus), stat="identity", position="stack")
+b = b + ggtitle(paste("Most abundant",aTaxa,"OTUs by sample for the",algae,"feedstock",sep=" "))
+b = b + labs(y = "Relative sequence abundance")
+b
