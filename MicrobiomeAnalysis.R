@@ -27,7 +27,7 @@ colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "
 ## sequence count.  This is used to help make sampling uniform across samples.
 microbiomeRaw = prune_samples(sample_sums(microbiomeRaw) > OTUThreshold, microbiomeRaw )
 set.seed(42)
-microbiomeRaw<-rarefy_even_depth(microbiomeRaw, sample.size = 1e-4*sum(sample_sums(microbiomeRaw)),rngseed = FALSE, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
+microbiomeRaw<-rarefy_even_depth(microbiomeRaw, sample.size = OTUThreshold,rngseed = FALSE, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
 
 ## If you want to scale OTU by relative sequence abundance.
 ## This is needed for any beta diversity analysis.
@@ -41,7 +41,7 @@ dist_methods <- unlist(distanceMethodList)
 print(dist_methods)
 ## Remove the user-defined distances.
 ## Choose 2 for weight unifrac and 8 for bray-curtis.
-dist_methods <- dist_methods[c(2)]
+dist_methods <- dist_methods[c(8)]
 print(dist_methods)
 
 ## Loop through each distance method, save each plot to a list, called plist.
@@ -63,22 +63,13 @@ for( i in dist_methods ){
   plist[[i]] = p
 }
 p
-## If you want to plot the distance metrics
-## in a grid of plots using available data.
-df = ldply(plist, function(x) x$data)
-names(df)[1] <- "distance"
-p = ggplot(df, aes(Axis.1, Axis.2, color=SampleType))
-p = p + geom_point(size=1.5, alpha=0.5)
-p = p + facet_wrap(~distance, scales="free")
-p = p + ggtitle("Multidimensional Distance Scalings \n various distance metrics for oyster microbiome data")
-p
 
 ## Plot Shannon index of samples.  Color by a design variable.
-plot_richness(microbiomeRaw, measures=c("Shannon","Chao1"),color="SampleType",title="Alpha diversity metrics \n oyster microbiome data")
+plot_richness(microbiomeRaw, measures=c("Shannon","Observed"),color="FeedType",title="Alpha diversity metrics \n oyster microbiome data")
 
 ## Store alpha diversity metrics, concatenated with experimental variables,
 ## in a single dataframe for subsequent significance tests.
-alphaDiversity <- estimate_richness(microbiomeRaw,measures=c("Shannon","Chao1"))
+alphaDiversity <- estimate_richness(microbiomeRaw,measures=c("Shannon","Observed"))
 alphaDiversity <- as.data.frame(alphaDiversity)
 alphaDiversity$Group <- rownames(alphaDiversity)
 alphaDiversity <- alphaDiversity[,c(which(colnames(alphaDiversity)=="Group"),which(colnames(alphaDiversity)!="Group"))]
@@ -89,12 +80,15 @@ colnames(alphaDiversity)[colnames(alphaDiversity)=="Group.x"] <- "Group"
 alphaDiversity <- as.data.frame(alphaDiversity)
 
 ## Store alpha diversity metrics and select them by value for a particular design variable.
-a <- alphaDiversity$Shannon[alphaDiversity$SampleType=="FEED"]
-b <- alphaDiversity$Shannon[alphaDiversity$SampleType!="FEED"]
+a <- alphaDiversity$Shannon[alphaDiversity$FeedType=="ISO"]
+b <- alphaDiversity$Shannon[alphaDiversity$FeedType=="CHAE"]
 
 ## Perform a Wilcoxon statistical test of significance on
 ## alpha diversity metrics separated by a design variable.
-wilcox.test(a,b)
+wtest <- wilcox.test(a,b)
+wtest
+## Compute Z score of test.
+qnorm(wtest$p.value)
 
 ## Perform a PERMANOVA using a set number of permutations on a particular
 ## beta diversity metric and the significance of a particular design variable.
@@ -102,3 +96,13 @@ microbiomeDF = as(sample_data(microbiome), "data.frame")
 microbiomeDist = distance(microbiome,method="wunifrac")
 microbiomeAdonis = adonis(microbiomeDist ~ FeedType, microbiomeDF,permutations = 10000)
 microbiomeAdonis
+
+## If you want to plot the beta diversity distance metrics
+## in a grid of plots using available data.
+df = ldply(plist, function(x) x$data)
+names(df)[1] <- "distance"
+p = ggplot(df, aes(Axis.1, Axis.2, color=SampleType))
+p = p + geom_point(size=1.5, alpha=0.5)
+p = p + facet_wrap(~distance, scales="free")
+p = p + ggtitle("Multidimensional Distance Scalings \n various distance metrics for oyster microbiome data")
+p
