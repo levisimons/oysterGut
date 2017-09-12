@@ -123,10 +123,10 @@ colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "
 ## Find the most abundant OTUs as selected by an experiment variable
 ## such as feed type.
 aTaxa = 5
-algae = "TET"
-MBSubset = subset_taxa(microbiomeRaw,FeedType=feed)
+algae = "ISO"
+MBSubset = subset_samples(microbiomeRaw,FeedType==algae)
 MBAbundant = sort(taxa_sums(microbiomeRaw), TRUE)[1:aTaxa]
-MBSubset = prune_taxa(names(MBAbundant), microbiomeRaw)
+MBSubset = prune_taxa(names(MBAbundant), MBSubset)
 MBSubset = transform_sample_counts(MBSubset,function(x) x / sum(x))
 
 ## Plot the most abundant OTUs
