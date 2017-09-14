@@ -103,8 +103,7 @@ qnorm(wtest$p.value)
 ## Perform a PERMANOVA using a set number of permutations on a particular
 ## beta diversity metric and the significance of a particular design variable.
 microbiomeDF = as(sample_data(microbiome), "data.frame")
-microbiomeDist = distance(microbiome,method="bray")
-microbiomeAdonis = adonis(microbiomeDist ~ FeedType, microbiomeDF,permutations = 10000)
+microbiomeAdonis = adonis(distance(microbiome,method="wunifrac")~FeedType,data=microbiomeDF,permutations = 10000)
 microbiomeAdonis
 
 ## If you want to plot the beta diversity distance metrics
