@@ -35,24 +35,6 @@ microbiomeRaw = prune_samples(sample_sums(microbiomeRaw) > OTUThreshold, microbi
 set.seed(42)
 microbiomeRaw<-rarefy_even_depth(microbiomeRaw, sample.size = OTUThreshold,rngseed = FALSE, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
 
-# Subset samples to look at core microbiomes by groups
-#microbiome=subset_samples(microbiomeRaw,SampleType=="FECAL")
-#microbiome=subset_samples(microbiome,FeedType=="TET")
-# Get relative abundance for each sample in each group.
-#microbiome <- microbiome::transform(microbiome,"compositional")
-# Detection frequency for OTUs which are observed with at least a non-zero sequence count.
-#head(prevalence(microbiome,detection=0,sort=TRUE),n=30)
-#microbiome.core <- core(microbiome, detection=0,prevalence=0.99)
-#otu_table(microbiome.core)
-# Taxonomic labels of core microbiome.
-#tax_table(microbiome.core)
-# Total core abundance in each sample (sum of abundances of the core members)
-#core.abundance <-sample_sums(core(microbiome,detection=0,prevalence=0.9))
-# With compositional (relative) abundances
-#det <- c(0, 0.1, 0.5, 2, 5, 20, 50)/100
-#prevalences <- seq(.05, 1, .05)
-plot_core(microbiome, prevalences = prevalences, detections = det, plot.type = "lineplot") + xlab("Relative Abundance (%)")
-
 # Select feed type to subsamples on
 feed="TET"
 # Subset samples to look at core microbiomes by groups
