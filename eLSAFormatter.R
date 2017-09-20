@@ -2,6 +2,7 @@ library(ggplot2)
 library(reshape2)
 library(phyloseq)
 library(tidyr)
+library(plyr)
 
 setwd("~/Desktop/OysterMicrobiome")
 
@@ -26,11 +27,18 @@ microbiomeDF <- psmelt(microbiome)
 ## row variable by week of sampling as the column variables.  The entries
 ## will be the relative OTU abundance.
 microbiomeAbundance <- spread(microbiomeDF,WeekFromStart,Abundance,fill=NA)
-LSAInput <- subset(microbiomeAbundance, select=c(1,17:28))
-colnames(LSAInput) <- c("#","Week1","Week2","Week3","Week4","Week5","Week6","Week7","Week8","Week9","Week10","Week11","Week12")
-write.table(LSAInput,file="LSAInput.tsv",quote=FALSE,sep="\t")
-
+microbiomeAbundance$OTUInfo <- paste(microbiomeAbundance$OTU,microbiomeAbundance$genus,microbiomeAbundance$SampleID,sep="_")
+microbiomeAbundance <- microbiomeAbundance[,c(29,1:28)]
 ## Select and output experimental variables for each OTU node for later
 ## Cytoscape analysis.
-LSANodes <- subset(microbiomeAbundance,select=c(1,3:7,11:16))
-write.table(LSANodes,file="eLSANodes.csv",quote=FALSE,sep=",",row.names=F)
+LSANodes <-subset(microbiomeAbundance,select=c(1,5:8,11:17))
+write.table(LSANodes,file="eLSANodes.csv",quote=FALSE,sep=",",row.names=FALSE)
+## Finish aggregating data so that the first column contains:
+## OTU number_genus_SampleID
+## and the remaining columns are the relative OTU abundance by week.
+microbiomeAbundance <- microbiomeAbundance[,-c(2:17)]
+colnames(microbiomeAbundance) <- c("OTUInfo","Week1","Week2","Week3","Week4","Week5","Week6","Week7","Week8","Week9","Week10","Week11","Week12")
+microbiomeAbundance <- aggregate(microbiomeAbundance,by=list(microbiomeAbundance$OTUInfo),FUN=function(x) na.omit(x)[1])[,-1]
+LSAInput <- microbiomeAbundance
+colnames(LSAInput) <- c("#","Week1","Week2","Week3","Week4","Week5","Week6","Week7","Week8","Week9","Week10","Week11","Week12")
+write.table(LSAInput,file="LSAInput.tsv",quote=FALSE,sep="\t",row.names=FALSE)
