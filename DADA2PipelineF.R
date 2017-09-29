@@ -73,29 +73,35 @@ head(track)
 ## Assign taxonomy down to the genus level.
 set.seed(100) # Initialize random number generator for reproducibility
 taxa <- assignTaxonomy(seqtab.nochim, "/Users/levisimons/Desktop/DADA2Analysis/silva_nr_v128_train_set.fa.gz", minBoot=80)
-unname(taxa)
-
-## Assign species level taxonomy
-taxa.plus <- addSpecies(taxa, "/Users/levisimons/Desktop/DADA2Analysis/silva_species_assignment_v128.fa.gz", verbose=TRUE)
-
-## Save output for downstream Phyloseq analysis.
-saveRDS(microbiomeRaw,"/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds")
-
-## If the DADA2 output needs to be loaded for subsequent Phyloseq analysis
-## load file back as a Phyloseq object
-microbiomeRaw <- readRDS("/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds")
 microbiomeRaw <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE), tax_table(taxa))
+
 ## Prune away samples.
 ## F2R15 is poorly sampled.  F15R16 is the even mock community.  F16R16 is the staggered mock community.
 microbiomeRaw <- prune_samples(sample_names(microbiomeRaw) != "F2R15"
                                & sample_names(microbiomeRaw) != "F15R16"
                                & sample_names(microbiomeRaw) != "F16R16", microbiomeRaw)
+
 ## Load the phylogenetic tree structure and experimental design variables
 ## into the Phyloseq object.
 phy_tree(microbiomeRaw) <- rtree(ntaxa(microbiomeRaw), rooted=TRUE, tip.label=taxa_names(microbiomeRaw))
 factors <- read.table("MicrobiomeFactors.csv", header=TRUE, sep=",",as.is=T)
 factors <- sample_data(data.frame(factors, row.names=sample_names(microbiomeRaw)))
 microbiomeRaw <- merge_phyloseq(microbiomeRaw,factors)
+## Check taxonomic assignments to each sequence down to the genus level.
+unname(taxa)
+
+## Save output for downstream Phyloseq analysis.
+saveRDS(microbiomeRaw,"/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds")
+
+## Assign species level taxonomy
+taxa.plus <- addSpecies(taxa, "/Users/levisimons/Desktop/DADA2Analysis/silva_species_assignment_v128.fa.gz", verbose=TRUE)
+
+## Save output again for downstream Phyloseq analysis.
+saveRDS(microbiomeRaw,"/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds")
+
+## If the DADA2 output needs to be loaded for subsequent Phyloseq analysis
+## load file back as a Phyloseq object
+microbiomeRaw <- readRDS("/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds")
 
 ## Subset the microbiome data by various experimental variables.
 microbiome <- subset_samples(microbiomeRaw,PhaseAndStatus!="FEED1" & PhaseAndStatus!="FEED2" & PhaseAndStatus!="FEED3")
