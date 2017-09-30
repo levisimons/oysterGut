@@ -96,6 +96,21 @@ saveRDS(microbiomeRaw,"/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds
 ## Assign species level taxonomy
 taxa.plus <- addSpecies(taxa, "/Users/levisimons/Desktop/DADA2Analysis/silva_species_assignment_v128.fa.gz", verbose=TRUE)
 
+## Load in new species level data.
+microbiomeRaw <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE), tax_table(taxa.plus))
+## Prune away samples.
+## F2R15 is poorly sampled.  F15R16 is the even mock community.  F16R16 is the staggered mock community.
+microbiomeRaw <- prune_samples(sample_names(microbiomeRaw) != "F2R15"
+                               & sample_names(microbiomeRaw) != "F15R16"
+                               & sample_names(microbiomeRaw) != "F16R16", microbiomeRaw)
+
+## Load the phylogenetic tree structure and experimental design variables
+## into the Phyloseq object.
+phy_tree(microbiomeRaw) <- rtree(ntaxa(microbiomeRaw), rooted=TRUE, tip.label=taxa_names(microbiomeRaw))
+factors <- read.table("MicrobiomeFactors.csv", header=TRUE, sep=",",as.is=T)
+factors <- sample_data(data.frame(factors, row.names=sample_names(microbiomeRaw)))
+microbiomeRaw <- merge_phyloseq(microbiomeRaw,factors)
+
 ## Save output again for downstream Phyloseq analysis.
 saveRDS(microbiomeRaw,"/Users/levisimons/Desktop/DADA2Analysis/microbiomeRaw.rds")
 
