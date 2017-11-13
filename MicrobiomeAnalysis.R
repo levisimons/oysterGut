@@ -1,8 +1,11 @@
 library("plyr")
+library(dplyr)
 library("ggplot2")
 library(phyloseq)
 library("ape")
 library("vegan")
+library("microbiome")
+library(data.table)
 
 setwd("~/Desktop/OysterMicrobiome")
 
@@ -11,8 +14,6 @@ OTUCount <- import_mothur(mothur_shared_file = "stability.opti_mcc.shared",
                           mothur_constaxonomy_file = "stability.cons.taxonomy")
 ## Import phylogenetic tree into microbiome data set.
 phy_tree(OTUCount) <- rtree(ntaxa(OTUCount), rooted=TRUE, tip.label=taxa_names(OTUCount))
-## Determine a sequence count by sample threshold for subsampling.
-OTUThreshold = as.integer(1e-4*sum(sample_sums(OTUCount)))
 
 ## Read in experimental design variables, such as the week the sample was taken.
 factors <- read.table("MicrobiomeFactors.csv", header=TRUE, sep=",",as.is=T)
@@ -27,26 +28,23 @@ microbiomeRaw <- merge_phyloseq(OTUCount,factors)
 ## Update the taxonomic order names.
 colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "family",  "genus")
 
-## Filter out samples which contain less than a certain fraction of the total
-## sequence count.  This is used to help make sampling uniform across samples.
-microbiomeRaw = prune_samples(sample_sums(microbiomeRaw) > OTUThreshold, microbiomeRaw )
-set.seed(42)
-microbiomeRaw<-rarefy_even_depth(microbiomeRaw, sample.size = OTUThreshold,rngseed = FALSE, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
+## Plot log of read depth per sample.
+n <- sample_sums(microbiomeRaw)
+bn <- barplot(n,xaxt="n",log="y",main="Log of the total sequence count per sample",ylab="Log sequence total per sample",xlab="Samples")
 
 ## If you want to scale OTU by relative sequence abundance.
 ## This is needed for any beta diversity analysis.
 ## OTUs with a rarity below a given cutoff are removed from this analysis.
-microbiome <- microbiomeRaw
-microbiome = transform_sample_counts(microbiome,function(x) x / sum(x))
-## If you want to filter out OTUs with a relative abundance below a given cutoff.
-microbiome = filter_taxa(microbiome, function(x) mean(x) > 1e-3, TRUE)
+#microbiome <- subset_samples(microbiomeRaw,SampleType=="FECAL")
+microbiome <- subset_samples(microbiomeRaw,PhaseAndStatus=="EXP_FECAL_MONTH_1"|PhaseAndStatus=="EXP_FECAL_MONTH_2"|PhaseAndStatus=="EXP_FECAL_MONTH_3"|PhaseAndStatus=="CON_FECAL_MONTH_1"|PhaseAndStatus=="CON_FECAL_MONTH_2"|PhaseAndStatus=="CON_FECAL_MONTH_3")
+microbiome <- microbiome::transform(microbiome,"compositional")
 
 ## Load distance methods.
 dist_methods <- unlist(distanceMethodList)
 print(dist_methods)
 ## Remove the user-defined distances.
 ## Choose 2 for weighted unifrac and 8 for bray-curtis.
-dist_methods <- dist_methods[c(8)]
+dist_methods <- dist_methods[c(2)]
 print(dist_methods)
 
 ## Loop through each distance method, save each plot to a list, called plist.
@@ -57,21 +55,26 @@ for( i in dist_methods ){
   iDist <- distance(microbiome, method=i)
   # Calculate ordination
   iMDS  <- ordinate(microbiome, "MDS", distance=iDist)
+  ordinate(microbiome,"MDS",distance=iDist)
   ## Make plot
   # Don't carry over previous plot (if error, p will be blank)
   p <- NULL
   # Create plot, store as temp variable, p
-  p <- plot_ordination(microbiome, iMDS, color="FeedType")
-  # Add title to each plot
-  p <- p + ggtitle(paste("MDS using distance method ", i, sep=""))
+  p <- plot_ordination(microbiome, iMDS, color="PhaseAndStatus")
+  # Increase font size
+  p <- p + theme(text = element_text(size = 10))+ stat_ellipse(aes(group=PhaseAndStatus))
   # Save the graphic to file.
   plist[[i]] = p
 }
-p + geom_point(size=3.5, alpha=1)
+p + geom_point(size=1, alpha=1)
+pdf()
+pdf('TreatmentAndControlMicrobiomeWunifrac.pdf',7,7)
+plot(p)
+dev.off()
 
 
 ## Plot Shannon index of samples.  Color by a design variable.
-plot_richness(microbiomeRaw, measures=c("Shannon","Observed"),color="WeekFromStart",title="Alpha diversity metrics \n oyster microbiome data")
+plot_richness(microbiomeRaw, measures=c("Shannon","Observed"),color="SampleType",title="Alpha diversity metrics \n oyster microbiome data")
 
 ## Store alpha diversity metrics, concatenated with experimental variables,
 ## in a single dataframe for subsequent significance tests.
@@ -86,12 +89,27 @@ colnames(alphaDiversity)[colnames(alphaDiversity)=="Group.x"] <- "Group"
 alphaDiversity <- as.data.frame(alphaDiversity)
 
 ## Store alpha diversity metrics and select them by value for a particular design variable.
-a <- alphaDiversity$Shannon[alphaDiversity$WeekFromStart<=3]
-b <- alphaDiversity$Shannon[alphaDiversity$WeekFromStart>=3]
+a <- alphaDiversity$Shannon[alphaDiversity$SampleType=="FEED"]
+b <- alphaDiversity$Shannon[alphaDiversity$SampleType!="FEED"]
 
 ## Plot alpha diversity metrics versus time
-plot(alphaDiversity$WeekFromStart,alphaDiversity$Shannon, xlab="Week", ylab="Sample Shannon index",main="Sample alpha diversity by week")
-plot(alphaDiversity$WeekFromStart,alphaDiversity$Observed, xlab="Week", ylab="Sample OTU richnes",main="Sample OTU richness by week")
+a <- ggplot(alphaDiversity, aes(WeekFromStart, Shannon, color = ExperimentalStatus))
+a = a + labs(x="Week", y="Sample Shannon index")
+a = a + geom_point(size=3.5, alpha=1)
+a = a + ggtitle("Sample Shannon index over time")
+a
+b <- ggplot(alphaDiversity, aes(WeekFromStart, Observed, color = ExperimentalStatus))
+b = b + labs(x="Week", y="Sample OTU richness")
+b = b + geom_point(size=3.5, alpha=1)
+b = b + ggtitle("Sample OTU richness index over time")
+b
+
+## Plot evenness of samples by OTU abundance.
+TaxaEvenness <- evenness(microbiomeRaw,index="all",zeroes=TRUE)
+TaxaEvenness <- merge(TaxaEvenness,factors,by="row.names")
+t <- ggplot(data=TaxaEvenness,aes(x=Group,y=pielou,color=FeedType))+geom_point(size=3.5, alpha=1)
+t <- t + labs(x="Sample") + ggtitle(paste("Sample evenness\nRarefied sampling depth:",OTUThreshold,"reads",sep=" "))+theme(axis.text.x=element_blank())
+t 
 
 ## Perform a Wilcoxon statistical test of significance on
 ## alpha diversity metrics separated by a design variable.
@@ -102,8 +120,9 @@ qnorm(wtest$p.value)
 
 ## Perform a PERMANOVA using a set number of permutations on a particular
 ## beta diversity metric and the significance of a particular design variable.
-microbiomeDF = as(sample_data(microbiome), "data.frame")
-microbiomeAdonis = adonis(distance(microbiome,method="wunifrac")~FeedType,data=microbiomeDF,permutations = 10000)
+MBSubset = subset_samples(microbiome, Phase=="3")
+microbiomeDF = as(sample_data(MBSubset), "data.frame")
+microbiomeAdonis = adonis(distance(MBSubset,method="bray")~ExperimentalStatus,data=microbiomeDF,permutations = 10000)
 microbiomeAdonis
 
 ## If you want to plot the beta diversity distance metrics
@@ -117,9 +136,9 @@ p = p + ggtitle("Multidimensional Distance Scalings \n various distance metrics 
 p
 
 ## Bar plot of relative OTU abundances.
-g = plot_bar(microbiome, fill="phylum", facet_grid = ~SampleType)
+g = plot_bar(microbiome, fill="phylum", facet_grid = ~PhaseAndStatus)
 g = g + geom_bar(aes(color=phylum, fill=phylum), stat="identity", position="stack")
-g = g + ggtitle(paste("Relative OTU abundance by sample \n Even sampling depth of ", OTUThreshold, "sequences",sep=" "))
+g = g + ggtitle(paste("Relative OTU abundance by feed \n Even sampling depth of ", OTUThreshold, "sequences",sep=" "))
 g
 
 ## Merge relative OTU abundance data with design variables into a Phyloseq object.
@@ -131,15 +150,25 @@ colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "
 ## Find the most abundant OTUs as selected by an experiment variable
 ## such as feed type.
 aTaxa = 10
-algae = "all"
-MBSubset = subset_samples(microbiomeRaw)
-MBAbundant = sort(taxa_sums(microbiomeRaw), TRUE)[1:aTaxa]
-MBSubset = prune_taxa(names(MBAbundant), MBSubset)
-MBSubset = transform_sample_counts(MBSubset,function(x) x / sum(x))
+microbiome <- subset_samples(microbiomeRaw, Phase=="3")
+microbiome <- subset_samples(microbiome, SampleType!="GUT")
+microbiome <- merge_samples(microbiome,"PhaseAndStatus")
+microbiome <- microbiome::transform(microbiome,"compositional")
+MBAbundant = sort(taxa_sums(microbiome), TRUE)[1:aTaxa]
+MBSubset = prune_taxa(names(MBAbundant), microbiome)
 
 ## Plot the most abundant OTUs
-b = plot_bar(MBSubset, fill="genus", facet_grid = ~SampleType)
+b = plot_bar(MBSubset, fill="genus")
+b = b + theme(legend.text = element_text(size = 10))
+b = b + theme(plot.title = element_text(size = rel(2))) + theme(legend.title = element_text(size=10))
+b = b + theme(axis.text.x = element_text(size=10))+ theme(axis.text.y = element_text(size=10))
+b = b + theme(axis.title.y = element_text(size = rel(1.5), angle = 90)) + theme(axis.title.x = element_text(size = rel(1.5)))
+b = b + theme(axis.ticks = element_line(size = 2))
 b = b + geom_bar(aes(color=genus, fill=genus), stat="identity", position="stack")
-b = b + ggtitle(paste("Most abundant",aTaxa,"OTUs by sample for",algae,"feedstock",sep=" "))
-b = b + labs(y = "Relative sequence abundance")
+#b = b + ggtitle(paste("Most abundant",aTaxa,"OTUs by sample origin.  Weeks 9 to 12.",sep=" "))
+b = b + labs(y = "Relative sequence\nabundance", x= "Sample groups")
 b
+pdf()
+pdf('TopTaxaPhase3.pdf',7,7)
+plot(b)
+dev.off()
