@@ -273,8 +273,8 @@ GISBiochemDataMDWS <- GISBiochemData[which(GISBiochemData$LU_2011_WS < 15 & GISB
 GISBiochemDataHDWS <- GISBiochemData[which(GISBiochemData$LU_2011_WS >= 15),]
 
 #Select subset data frame from the total merged data set
-selected <- GISBiochemDataMD1K
-suffix <- "MD1K"
+selected <- GISBiochemDataMDWS
+suffix <- "MDWS"
 
 #Initialize a data frame where the rows are all of the unique measurements for a given
 #subset of the data.
@@ -299,6 +299,56 @@ for(ID in unique(selected$UniqueID)){
 
 eLSAInput[is.na(eLSAInput)] <- "NA"
 
+#Determine the number of time points in the eLSA input file.
+spotNum = length(unique(selected$Year))
+#Determine the number of replicates per time point in the eLSA input file.
+#In order to ensure a uniform number of replicates per year this needs to
+#be the maximum number of replicates for all of the years available.
+repMax = 0
+for(year in unique(selected$Year)){
+  tmp <- filter(selected, Year == year)[,c(6,7)]
+  repNum = length(unique(tmp$UniqueID))
+  if(repNum >= repMax){repMax = repNum}
+  print (paste(repMax,repNum,sep=" "))
+}
+repNum = repMax
+
+#Now insert the replicates with actual data in between the "NA" dummy columns
+#which ensure that the final eLSA input file has an even number of replicates
+#per year regardless of the variations in the actual number of sites (replicates)
+#sampled per year.
+eLSAtmp <- eLSAInput[,1]
+j=1
+k=1
+nulCol <- data.frame(matrix(ncol=repNum*spotNum,nrow=length(unique(selected$FinalID))))
+nulCol[,1] <- eLSAInput[,1]
+for(year in unique(selected$Year)){
+  tmp <- filter(selected, Year == year)
+  rep = length(unique(tmp$UniqueID))
+  for(i in 1:repNum){
+    if(i <= rep){
+      repLabel = paste(year,"DoneRep",i,sep="")
+      #print(repLabel)
+      j=j+1
+      k=k+1
+      eLSAtmp[,k] <- eLSAInput[,j]
+      #print(j)
+    }
+    else{
+      repLabel = as.character(paste(year,"Rep",i,sep=""))
+      #colnames(nulCol) <- c("#FinalID",repLabel)
+      #nulCol$repLabel <- "NA"
+      #eLSAtmp$repLabel <- merge(eLSAtmp,nulCol$repLabel,by="#FinalID")
+      k=k+1
+      #colnames(eLSAtmp[k]) <- repLabel
+      eLSAtmp[,k] <- "NA"
+      print(paste(k,repLabel,sep=" "))
+    }
+  }
+}
+
+eLSAInput <- eLSAtmp
+
 #Output dataframe for use in eLSA.
 #Note that the the data needs to have at least two location replicates per time point
 #and that the number of replicates per time point needs to be uniform.
@@ -312,7 +362,7 @@ write.table(eLSAInput,paste("eLSAInput",suffix,".txt",sep=""),quote=FALSE,sep="\
 #Compute network statistics of the likeliest association networks between taxa.
 library(igraph)
 library(network)
-networkdata <- read.table("eLSAOutputHD1K.txt",header=TRUE, sep="\t",as.is=T)
+networkdata <- read.table(paste("eLSAOutput",suffix,".txt",sep=""),header=TRUE, sep="\t",as.is=T)
 #Filter out association network data based on P scores less than 0.05.
 networkdata <- filter(networkdata, P <= 0.05)
 names(networkdata)[names(networkdata)=="PCC"]<-"weight"
