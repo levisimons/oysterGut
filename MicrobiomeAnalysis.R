@@ -28,14 +28,21 @@ microbiomeRaw <- merge_phyloseq(OTUCount,factors)
 ## Update the taxonomic order names.
 colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "family",  "genus")
 
-## Plot log of read depth per sample.
-n <- sample_sums(microbiomeRaw)
-bn <- barplot(n,xaxt="n",log="y",main="Log of the total sequence count per sample",ylab="Log sequence total per sample",xlab="Samples")
+## Plot log of read depth per sample by sample type.
+## Output read depths as a table.
+library(ggplot2)
+n <- as.data.frame(sample_sums(microbiomeRaw))
+n$SampleType <- factors$SampleType
+n$SampleName <-factors$Group
+colnames(n) <- c("ReadDepth","SampleType","Sample")
+bn <- ggplot(data=n, aes(x=Sample,y=ReadDepth,fill=SampleType))+geom_bar(stat="identity")
+bn
+write.csv(n,file="OysterMicrobiomeReadDepth.csv",quote=TRUE)
 
 ## If you want to scale OTU by relative sequence abundance.
 ## This is needed for any beta diversity analysis.
 ## OTUs with a rarity below a given cutoff are removed from this analysis.
-#microbiome <- subset_samples(microbiomeRaw,SampleType=="FECAL")
+microbiome <- subset_samples(microbiomeRaw,SampleType=="FEED")
 microbiome <- subset_samples(microbiomeRaw,PhaseAndStatus=="EXP_FECAL_MONTH_1"|PhaseAndStatus=="EXP_FECAL_MONTH_2"|PhaseAndStatus=="EXP_FECAL_MONTH_3"|PhaseAndStatus=="CON_FECAL_MONTH_1"|PhaseAndStatus=="CON_FECAL_MONTH_2"|PhaseAndStatus=="CON_FECAL_MONTH_3")
 microbiome <- microbiome::transform(microbiome,"compositional")
 
@@ -44,7 +51,7 @@ dist_methods <- unlist(distanceMethodList)
 print(dist_methods)
 ## Remove the user-defined distances.
 ## Choose 2 for weighted unifrac and 8 for bray-curtis.
-dist_methods <- dist_methods[c(2)]
+dist_methods <- dist_methods[c(8)]
 print(dist_methods)
 
 ## Loop through each distance method, save each plot to a list, called plist.
@@ -60,16 +67,19 @@ for( i in dist_methods ){
   # Don't carry over previous plot (if error, p will be blank)
   p <- NULL
   # Create plot, store as temp variable, p
-  p <- plot_ordination(microbiome, iMDS, color="PhaseAndStatus")
-  # Increase font size
-  p <- p + theme(text = element_text(size = 10))+ stat_ellipse(aes(group=PhaseAndStatus))
+  p <- plot_ordination(microbiome, iMDS, color="FeedType")
+  # Increase font size and point size.  Make the gridlines visible.
+  p <- p + theme(text = element_text(size = 20))
+  p <- p + stat_ellipse(aes(group=FeedType))
+  p <- p + geom_point(size=6, alpha=1)
+  p <- p + theme(panel.grid.major = element_line(size=0.3, linetype="solid", colour="black"))
+  p <- p + theme(panel.grid.minor = element_line(size=0.3, linetype="solid", colour="black"))
   # Save the graphic to file.
   plist[[i]] = p
 }
-p + geom_point(size=1, alpha=1)
-pdf()
-pdf('TreatmentAndControlMicrobiomeWunifrac.pdf',7,7)
-plot(p)
+tiff()
+tiff("RevisedFeedWunifrac.tiff", width = 7, height = 7, units = 'in', res = 300)
+plot(p) # Make plot
 dev.off()
 
 
@@ -151,7 +161,7 @@ colnames(tax_table(microbiomeRaw)) <- c("kingdom", "phylum", "class", "order", "
 ## such as feed type.
 aTaxa = 10
 microbiome <- subset_samples(microbiomeRaw, Phase=="3")
-microbiome <- subset_samples(microbiome, SampleType!="GUT")
+microbiome <- subset_samples(microbiome, SampleType=="GUT")
 microbiome <- merge_samples(microbiome,"PhaseAndStatus")
 microbiome <- microbiome::transform(microbiome,"compositional")
 MBAbundant = sort(taxa_sums(microbiome), TRUE)[1:aTaxa]
@@ -169,6 +179,6 @@ b = b + geom_bar(aes(color=genus, fill=genus), stat="identity", position="stack"
 b = b + labs(y = "Relative sequence\nabundance", x= "Sample groups")
 b
 pdf()
-pdf('TopTaxaPhase3.pdf',7,7)
+pdf('TopTaxaPhase3GUT.pdf',7,7)
 plot(b)
 dev.off()
